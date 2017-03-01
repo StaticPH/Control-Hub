@@ -33,17 +33,18 @@ class window(QMainWindow):
 		super(window, self).__init__()
 		print("Starting to do things")
 		self.setObjectName("Mother Window")# print("I am the "+ self.objectName())
-		self.setAttribute(Qt.WA_QuitOnClose, True)#Ensure that closing the main window also closes the preferences window
+		self.setAttribute(Qt.WA_QuitOnClose, True)#Ensures that closing the main window also closes the preferences window
 
 					#Configs
-		# self.settingsPath = QSettings("D:\Projects\Python\SwitchBoard\MySwitchboard.cfg", QSettings.NativeFormat)
-		# self.settings.setPath(QSettings.IniFormat,QSettings.UserScope,"D:\Projects\Python\SwitchBoard\MySwitchboard.cfg")
 		self.settings = QSettings("D:\Projects\Python\SwitchBoard\MySwitchboard.cfg", QSettings.IniFormat)
 		self.settings.setPath(
 				QSettings.IniFormat, QSettings.UserScope,"D:\Projects\Python\SwitchBoard\MySwitchboard.cfg"
 		)
+		# self.settingsPath = QSettings("D:\Projects\Python\SwitchBoard\MySwitchboard.cfg", QSettings.NativeFormat)
+		# self.settings.setPath(QSettings.IniFormat,QSettings.UserScope,"D:\Projects\Python\SwitchBoard\MySwitchboard.cfg")
 		self.initSettings()
-		#print("Listing all config keys:" + str(self.settings.allKeys())); print("Config file is" + self.settings.fileName())
+		# DEBUG: LIST ALL CONFIG KEYS
+		# print("Listing all config keys:" + str(self.settings.allKeys())); print("Config file is" + self.settings.fileName())
 
 		# setup window aspects
 		self.setWindowTitle(self.settings.value("cfgWindowTitle"))
@@ -58,7 +59,7 @@ class window(QMainWindow):
 		self.preferencesDialog = QDialog()
 
 		self.setupToolBars()
-		# for QMainWindow, do a find for things with menu, status, tab, tool
+		#NOTE: for QMainWindow, do a find for things with menu, status, tab, tool
 
 		# TODO:
 		#   Mutually exclusive checkboxes/toggle buttons for battery settings
@@ -70,14 +71,16 @@ class window(QMainWindow):
 		#   Display of (local/computer) date and time. local weather if arrangeable
 		# ?   Display of current network I/O ?
 		#   keep on top capability
-		#   retain previous settings
+		#DONE		retain previous settings
 		# ?   allow adjusting colors of histograph/chart/progress bar attributes through a (menu accessed popup or tab?) application preferences (menu?)
 		#   universal color picker function. WITH A PIPETTE TOOL
 		#   application close confirmation popup (disableable in preferences)
 		#   Button to clear system clipboard
 		# ?  snipping tool quick launch button?
 		#   make status bar at bottom of page have clearly defined edges
-
+		#   Create a list of QActions to have initialized in some kind of loop?
+		#   give main toolbar its own context menu with a CHECKABLE option to lock/unlock the toolbar
+		#DONE		sync settings TO config before close?
 		pop=self.basicButton('test', self.popup, None, 25, 100)
 
 		box = self.basicCheckBox(self.editTitle)
@@ -199,28 +202,24 @@ class window(QMainWindow):
 
 		if func is not None:
 			func
-		# something something show number in a box nearby
+		# TODO:something something show number in a box nearby
 
 		return knob
 	# "Template" function for a toolbar button with an icon
 	def toolBar_Icon (self, icon, func, tooltip, statustip = "Null"):
 		item = QAction(QIcon(icon), tooltip, self)
 		if statustip != "Null": item.setStatusTip(statustip)
-		if func is not None:
-			# noinspection PyUnresolvedReferences
-			item.triggered.connect(func)
-		else:
-			print("One or more icon type items on your toolbar has no function")
+		# noinspection PyUnresolvedReferences
+		if func is not None:item.triggered.connect(func)
+		else: print("One or more icon type items on your toolbar has no function")
 		return item
 
 	# "Template" function for a text-only toolbar button
 	def toolBar_Text (self, text, func):
 		item = QAction(text, self)
-		if func is not None:
-			# noinspection PyUnresolvedReferences
-			item.triggered.connect(func)
-		else:
-			print("One or more text type items on your toolbar has no function")
+		# noinspection PyUnresolvedReferences
+		if func is not None:item.triggered.connect(func)
+		else: print("One or more text type items on your toolbar has no function")
 		return item
 
 	# Add toolbars and populate them with buttons
@@ -247,8 +246,7 @@ class window(QMainWindow):
 	def menuItem (self, func, name, tip = None, shortcut = "Null", isToggle=False, group=None):
 		item = QAction(name, self)  # self reminder: item is now a QAction
 		item.setStatusTip(tip)
-		if shortcut != "Null": item.setShortcut(shortcut)
-		# ;else: print("no shortcut for menu item \""+name+"\"")
+		if shortcut != "Null": item.setShortcut(shortcut) # ;else: print("no shortcut for menu item \""+name+"\"")
 		if isToggle !=False: item.setCheckable(True)
 		if group is not None: group.addAction(item)
 
@@ -260,8 +258,7 @@ class window(QMainWindow):
 			#print(func.__name__ + " is not a wrapper. It is a " + type(func).__name__)
 			# noinspection PyUnresolvedReferences
 			item.triggered.connect(func)
-		else:
-			print("Menu item \"" + name + "\" has no function")
+		else: print("Menu item \"" + name + "\" has no function")
 		return item
 
 	# Add menus and populate them with actions
@@ -298,10 +295,10 @@ class window(QMainWindow):
 		styleMenu = viewMenu.addMenu("Styles")
 
 		layoutMenu = viewMenu.addMenu("Layout")
-		layoutMenu.addAction(self.menuItem(testPrint, None))  # give meaningful functions later
+		layoutMenu.addAction(self.menuItem(testPrint, None))  # TODO:give meaningful functions later
 		# Add actions to menus
-		fileMenu.addAction(self.actQuit)  # add a status tip to this, "Close the application"
-		fileMenu.addAction(prefs)  # add a status tip to this, "View and edit application settings"
+		fileMenu.addAction(self.actQuit)  # TODO:add a status tip to this, "Close the application"
+		fileMenu.addAction(prefs)  # TODO:add a status tip to this, "View and edit application settings"
 
 		editMenu.addAction(self.actCopy)
 		editMenu.addAction(self.actCut)
@@ -335,8 +332,8 @@ class window(QMainWindow):
 		# every tab will be a widget, and the widget is assigned a name
 		# and added to the tab bar somewhere else
 		pass
-	###############################
-##This will deal with the settings page
+
+#Section####################################### Start Settings Handling ###############################################
 	def appPreferences (self):
 		config=self.settings
 		settingsPage=self.preferencesDialog
@@ -442,6 +439,10 @@ class window(QMainWindow):
 	# responses.finished.connect(something to save?)???     sender      senderSignalIndex       result? signals?
 	##something that saves preferences when the OK button is pressed
 	def initSettings(self):
+		# NOTE:Is toolbar moveable or locked in place. Is it floatable. Maybe if i figure out how to let the user adjust contents,
+		# NOTE: add an option to disable that ability? Enable/disable certain widgets?
+		# TODO: Figure out how to add descriptive text into the config file, if at all possible
+
 		config= self.settings	# test=config.setValue("test", 3);    print("test=" + str(config.value("test")))
 
 		#Style Configs
@@ -449,7 +450,7 @@ class window(QMainWindow):
 		if str(config.value("primaryStyle")).capitalize().replace(" ","") not in validStyles:
 			config.setValue("primaryStyle", "Windows Vista")
 			print("Resetting style to hard default")
-		self.themeControl(str(config.value("primaryStyle")).replace(" ",""))#Set the window style to the configured value
+		self.themeControl(str(config.value("primaryStyle")).replace(" ",""))#Sets the window style to the configured value
 
 		#Main Toolbar Configs
 		config.beginGroup("MainToolbar")
@@ -476,7 +477,7 @@ class window(QMainWindow):
 		cfgTitle=config.value("cfgWindowTitle")
 		if cfgTitle == "\n":     config.setValue("cfgWindowTitle", "I am a window")
 
-			#Make sure that default window geometry value is available in case there isn't one in the config
+			#Makes sure that default window geometry value is available in case there isn't one in the config
 		cfgWindowGeometry= config.value("mainWindowGeometry")
 		if type(cfgWindowGeometry) is None or cfgWindowGeometry=="\n" or cfgWindowGeometry=="":
 			config.setValue("mainWindowGeometry", defaultWindowGeometry)
@@ -485,11 +486,10 @@ class window(QMainWindow):
 		else:
 			# print("Geo: "+str((type(cfgWindowGeometry)))); print(cfgWindowGeometry)
 			pass
-#is toolbar moveable or locked in place. is it floatable. maybe if i figure out how to let the user adjust contents, add an option to disable that ability?
-#enable/disable certain widgets?
-#figure out how to add descriptive text into the config file, if at all possible
-################################ test functions #######################################
-	# Basic, DOES NOTHING, pop-up window prompt; probably wont make a template
+	pass#Little fix for a pet peeve of mine in PyCharm, where comments on the ends of functions are sometimes folded with the function
+# Section####################################### End Settings Handling ###############################################
+
+	# Basic,does nothing much, pop-up window prompt; probably wont make a template
 	def popup (self):
 		choice = QMessageBox(self)
 		choice.setText("What do you do?")  # move to center of popup
@@ -509,11 +509,10 @@ class window(QMainWindow):
 		if choice.clickedButton() is Arnold:    print("*Heavy Austrian accent* OUCH!")
 		elif choice.clickedButton() is Boring:  print("Well you're no fun")		# ...yeah, I had gotten frustrated at that time, and decided to be a bit silly
 	def editTitle (self, state):
-		if state == Qt.Unchecked:   self.setWindowTitle("Or am I?")
+		if state == Qt.Unchecked:   self.setWindowTitle("Temporary Title")
 		else:   self.setWindowTitle(self.settings.value("cfgWindowTitle"))
-
-	# there has to be a way to specify which progress bar this is for,
-	# but for the life of me I can't think of how
+	# there has to be a way to specify which progress bar this is for, but for the life of me I can't think of how.
+	# Cross that bridge if/when I come to it
 	def progress (self):
 		if self.bar.value() < 100:
 			self.bar.setValue(self.bar.value() + 1)
@@ -521,6 +520,13 @@ class window(QMainWindow):
 			elif self.bar.value() % 10 == 0:    print("Progress: " + str(self.bar.value()))
 		else: pass
 
+	def closeEvent(self, *args, **kwargs):
+		self.settings.setValue("mainWindowGeometry", self.saveGeometry())
+		# print("Saving Geometry")
+		# print(self.settings.value("mainWindowGeometry"))
+		# print(self.saveGeometry())
+		self.close()
+#Section############################### Start Test Functions #######################################
 	def clickButton (self, text = 'test', func = None, tip = None, X = 200, Y = 200):
 		btn = QPushButton(text, self)
 		btn.adjustSize()
@@ -528,22 +534,14 @@ class window(QMainWindow):
 		btn.setToolTip(tip)
 
 		if isinstance(func, wrapper):
-			def link ():    func.call()
+			def link ():func.call()
 			btn.clicked.connect(link)
-		else:   print("no function");   pass
+		else:print("no function");pass
 		return btn
+#Section############################### End Test Functions #######################################
 
-	def closeEvent(self, *args, **kwargs):
-		self.settings.setValue("mainWindowGeometry", self.saveGeometry())
-		# print("Saving Geometry")
-		# print(self.settings.value("mainWindowGeometry"))
-		# print(self.saveGeometry())
-		self.close()
 def endProgram ():    print("Goodbye");  sys.exit()
-
-
 def testPrint (text = "Debug"): print(text)
-
 
 def run ():
 	app = QApplication(sys.argv)
@@ -553,9 +551,4 @@ def run ():
 	display.show()
 	sys.exit(app.exec_())
 
-
 run()
-# TODO:
-# Create a list of QActions to have initialized in some kind of loop?
-#give main toolbar its own context menu with a CHECKABLE option to lock/unlock the toolbar
-#sync settings TO config before close?
