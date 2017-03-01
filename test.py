@@ -48,7 +48,7 @@ class window(QMainWindow):
 		# setup window aspects
 		self.setWindowTitle(self.settings.value("cfgWindowTitle"))
 		#self.defaultTitle = str(self.windowTitle())
-		self.setWindowIcon(QIcon('thingy.png'))
+		self.setWindowIcon(QIcon('logo.png'))#TODO: Edit the image to make the white background transparent
 		self.setStatusBar(QStatusBar(self))
 		self.declareActions()
 
@@ -227,7 +227,7 @@ class window(QMainWindow):
 	def setupToolBars (self):
 		# Make buttons
 		iconB = self.toolBar_Icon(
-				"thingy.png", testPrint, "icon", "Do something"
+				"logo.png", testPrint, "icon", "Do something"
 		)
 		textB = self.toolBar_Text("&Textual Button", testPrint)
 
