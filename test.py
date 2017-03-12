@@ -48,10 +48,16 @@ class window(QMainWindow):
 
 		# setup window aspects
 		self.setWindowTitle(self.settings.value("cfgWindowTitle"))
-		#self.defaultTitle = str(self.windowTitle())
 		self.setWindowIcon(QIcon('logo.png'))#TODO: Edit the image to make the white background transparent
-		self.setStatusBar(QStatusBar(self))
 		self.declareActions()
+		
+		self.setStatusBar(QStatusBar(self))
+		self.XY=QLabel("Cursor:") # TODO: Make this come with something to display the numerical position of the cursor; might involve the timerEvent of QStatusBar
+		# self.statusBar.addPermanentWidget(self.XY)
+		QStatusBar.addPermanentWidget(self.statusBar(),self.XY)
+
+		#TODO: Check if status bar properly has its QSizeGrip, using isSizeGripEnabled()
+		
 
 		self.topMenu()
 		self.mainToolBar = QObject
@@ -130,6 +136,8 @@ class window(QMainWindow):
 		tempPref=self.basicButton('Options', self.appPreferences, None, 300, 300)
 
 		self.restoreGeometry(self.settings.value("mainWindowGeometry"))
+		print("Window width:"+ str(self.width()))
+		print("Window height:"+ str(self.height()))
 		print("done init")
 	#Declare application wide Actions
 	# noinspection PyUnresolvedReferences
@@ -444,6 +452,8 @@ class window(QMainWindow):
 		# TODO: Figure out how to add descriptive text into the config file, if at all possible
 
 		config= self.settings	# test=config.setValue("test", 3);    print("test=" + str(config.value("test")))
+		self.windowFlags()
+		flags = Qt.WindowFlags()
 
 		#Style Configs
 		cfgStyle=config.value("primaryStyle")
@@ -476,6 +486,23 @@ class window(QMainWindow):
 		#Other Configs
 		cfgTitle=config.value("cfgWindowTitle")
 		if cfgTitle == "\n":     config.setValue("cfgWindowTitle", "I am a window")
+
+
+		# TODO: Add checkboxes for these to config manager
+		config.beginGroup("WindowFlags")
+		cfgKeepOnTop=config.value("cfgKeepOnTop")
+		if cfgKeepOnTop not in extendedBools:	config.setValue("cfgKeepOnTop", False)
+		elif cfgKeepOnTop in [1, "t", "T", "true", "True"]:config.setValue("cfgKeepOnTop", True)
+		elif cfgKeepOnTop in [0, "f", "F", "false", "False"]:config.setValue("cfgKeepOnTop", False)
+		cfgIsWindowFrameless=config.value("cfgIsFrameless")
+		if cfgIsWindowFrameless not in extendedBools:	config.setValue("cfgIsFrameless", False)
+		elif cfgIsWindowFrameless in [1, "t", "T", "true", "True"]: config.setValue("cfgIsFrameless", True)
+		elif cfgIsWindowFrameless in [0, "f", "F", "false", "False"]: config.setValue("cfgIsFrameless", False)
+
+		if (config.value("cfgKeepOnTop"))==True:	flags|=Qt.WindowStaysOnTopHint
+		if (config.value("cfgIsFrameless"))==True:	flags|=Qt.FramelessWindowHint
+		self.setWindowFlags(flags)
+		config.endGroup()
 
 			#Makes sure that default window geometry value is available in case there isn't one in the config
 		cfgWindowGeometry= config.value("mainWindowGeometry")
