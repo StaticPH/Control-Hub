@@ -3,9 +3,9 @@ from PyQt5.QtWidgets import (
 	QApplication, QMainWindow, QPushButton, QAction, QLabel, QCheckBox,
 	QProgressBar, QMessageBox, QComboBox, QDial, QHBoxLayout,
 	QVBoxLayout, QTabWidget, QWidget, QDialog, QDialogButtonBox,QStyleFactory,
-	QGridLayout, QLineEdit, QActionGroup, QStatusBar,QToolBar)
+	QGridLayout, QLineEdit, QActionGroup, QStatusBar,QToolBar, QColorDialog)
 # technically could've used the functions as they are inherited by QMainWindow instead of using QStatusBar and QToolBar directly
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QClipboard
 # from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import (Qt, QObject, QSettings)
 
@@ -17,6 +17,13 @@ class wrapper(object):
 
 	def call (self): return self.func(*self.args)
 # self.func(*self.args)
+class picker(QWidget):
+	# def __init__(self):
+	# 	super(picker,self).__init__()
+	# 	self.pickerDialog=self.openColorDialog()
+	def openColorDialog(self):
+		color = QColorDialog.getColor()
+		if color.isValid():		print(color.name())
 
 extendedBools=[0,1,"t","T","f","F","true","True","false","False"]
 statusTips={
@@ -34,6 +41,8 @@ class window(QMainWindow):
 		print("Starting to do things")
 		self.setObjectName("Mother Window")# print("I am the "+ self.objectName())
 		self.setAttribute(Qt.WA_QuitOnClose, True)#Ensures that closing the main window also closes the preferences window
+		self.clip=QApplication.clipboard()#System-wide clipboard
+		self.pickerButton=self.clickButton("Pipette",QColorDialog.getColor)
 
 					#Configs
 		self.settings = QSettings("D:\Projects\Python\SwitchBoard\MySwitchboard.cfg", QSettings.IniFormat)
@@ -48,45 +57,23 @@ class window(QMainWindow):
 
 		# setup window aspects
 		self.setWindowTitle(self.settings.value("cfgWindowTitle"))
-		self.setWindowIcon(QIcon('logo.png'))#TODO: Edit the image to make the white background transparent
+		self.setWindowIcon(QIcon('logo.png'))
 		self.declareActions()
-		
+
 		self.setStatusBar(QStatusBar(self))
 		self.XY=QLabel("Cursor:") # TODO: Make this come with something to display the numerical position of the cursor; might involve the timerEvent of QStatusBar
 		# self.statusBar.addPermanentWidget(self.XY)
 		QStatusBar.addPermanentWidget(self.statusBar(),self.XY)
 
 		#TODO: Check if status bar properly has its QSizeGrip, using isSizeGripEnabled()
-		
 
 		self.topMenu()
 		self.mainToolBar = QObject
 
 		self.preferencesDialog = QDialog()
-
 		self.setupToolBars()
 		#NOTE: for QMainWindow, do a find for things with menu, status, tab, tool
 
-		# TODO:
-		#   Mutually exclusive checkboxes/toggle buttons for battery settings
-		#   Histograph of motherboard, CPU, HDD, and SSD temperatures.
-		#   Display indicating current CPU clock speed. maybe only update every 5-10 seconds?
-		#   Display indicating CPU usage % and #of processes
-		#   Display indicating current RAM usage. probably in the form of a vertical bar AND a text label.
-		# ?   Quick launch button for Discord+Hexchat?
-		#   Display of (local/computer) date and time. local weather if arrangeable
-		# ?   Display of current network I/O ?
-		#   keep on top capability
-		#DONE		retain previous settings
-		# ?   allow adjusting colors of histograph/chart/progress bar attributes through a (menu accessed popup or tab?) application preferences (menu?)
-		#   universal color picker function. WITH A PIPETTE TOOL
-		#   application close confirmation popup (disableable in preferences)
-		#   Button to clear system clipboard
-		# ?  snipping tool quick launch button?
-		#   make status bar at bottom of page have clearly defined edges
-		#   Create a list of QActions to have initialized in some kind of loop?
-		#   give main toolbar its own context menu with a CHECKABLE option to lock/unlock the toolbar
-		#DONE		sync settings TO config before close?
 		pop=self.basicButton('test', self.popup, None, 25, 100)
 
 		box = self.basicCheckBox(self.editTitle)
@@ -94,6 +81,8 @@ class window(QMainWindow):
 		self.bar = self.progressBar(325, 75, 160, 28)
 		self.doProgress = self.basicButton('Increment Progress', self.progress, "", 200, 75)
 
+		clearClipboard= self.basicButton("Clear Clipboard", self.clip.clear)#Button which clears the system clipboard
+		#print(self.clip.text())#print clipboard text
 		Dial=self.dial(1, 100, 300)
 
 		self.pageBar = QTabWidget(self)  # TabWidget is a QWidget
@@ -101,18 +90,19 @@ class window(QMainWindow):
 		self.tab2 = QWidget()  # ;self.tab2.adjustSize()
 
 
-		tab2Layout= QVBoxLayout()
-		tab2Layout.addStretch(1)
-		tab2Layout.addWidget(pop)
-		tab2Layout.addWidget(box)
-		tab2Layout.addWidget(Dial)
+		tab1Layout= QVBoxLayout()
+		tab1Layout.addStretch(1)
+		tab1Layout.addWidget(pop)
+		tab1Layout.addWidget(clearClipboard)
+		tab1Layout.addWidget(box)
+		tab1Layout.addWidget(Dial)
 
 		progressBox = QHBoxLayout()
 		progressBox.addStretch(1)
 		progressBox.addWidget(self.doProgress)
 		progressBox.addWidget(self.bar)
 
-		self.tab1.setLayout(tab2Layout)
+		self.tab1.setLayout(tab1Layout)
 		self.tab2.setLayout(progressBox)#previously took progressBox as param
 
 
@@ -143,31 +133,32 @@ class window(QMainWindow):
 	# noinspection PyUnresolvedReferences
 	def declareActions (self):  # WIP
 		# cut
-		self.actCut = QAction("Cut", self)
+		self.actCut = QAction("Cu&t", self)
 		self.actCut.setShortcut("Ctrl+x")
 
 		def Link (): wrapper(testPrint, "Cut").call()
-
 		self.actCut.triggered.connect(Link)
+
 		# copy
-		self.actCopy = QAction("Copy", self)
+		self.actCopy = QAction("&Copy", self)
 		self.actCopy.setShortcut("Ctrl+c")
 
 		def Link (): wrapper(testPrint, "Copy").call()
-
 		self.actCopy.triggered.connect(Link)
+
 		# paste
-		self.actPaste = QAction("Paste", self)
+		self.actPaste = QAction("&Paste", self)
 		self.actPaste.setShortcut("Ctrl+v")
 
 		def Link (): wrapper(testPrint, "Paste").call()
-
 		self.actPaste.triggered.connect(Link)
 
 		# quit
-		self.actQuit = QAction("Quit", self)
+		self.actQuit = QAction("&Quit", self)
 		self.actQuit.setShortcut("Ctrl+q")
 		# self.actQuit.triggered.connect(endProgram)
+		# self.actQuit.setToolTip("Close the Application")
+		self.actQuit.setStatusTip("Close the application")
 		self.actQuit.triggered.connect(self.closeEvent)
 
 	#Simple button with default parameters for position, label, and tooltip(none)
@@ -244,6 +235,8 @@ class window(QMainWindow):
 		# Add toolbars to window. CRITICAL STEP
 		mainToolBarPosition=int(self.settings.value("MainToolbar/mainToolBarPosition"))
 		print("Main toolbar pos: " + str(mainToolBarPosition))
+		self.mainToolBar.setFloatable(self.settings.value("MainToolbar/isMainToolBarFloatable"))
+		self.mainToolBar.setMovable(self.settings.value("MainToolbar/isMainToolBarMovable"))
 		self.addToolBar(mainToolBarPosition, self.mainToolBar)
 
 		# Add buttons to toolbars
@@ -271,14 +264,14 @@ class window(QMainWindow):
 
 	# Add menus and populate them with actions
 	def topMenu (self):
-		# self.statusBar()
+		config=self.settings  #; self.statusBar()
 		mainMenu = self.menuBar()
 
 		# Make menu items
 		prefs = self.menuItem(
 				# wrapper(testPrint, "Preferences menu item selected")
 				# , "Preferences")
-				self.appPreferences, "Preferences")
+				self.appPreferences, "Preferences","View and edit application settings")
 		prefs.setMenuRole(QAction.PreferencesRole)
 
 		styleGroup=QActionGroup(mainMenu)
@@ -288,11 +281,15 @@ class window(QMainWindow):
 		fusion = wrapper(self.themeControl, "Fusion")
 		style1 = self.menuItem(fusion, "Fusion", statusTips["fusion"], isToggle=True, group=styleGroup)
 		style2 = self.menuItem(windows, "Windows", statusTips["windows"], isToggle=True, group=styleGroup)
-		style3 = self.menuItem(winVista, "Windows Vista", statusTips["vista"], isToggle=True, group=styleGroup);style3.setText(style3.text() + " (Default)")
+		style3 = self.menuItem(winVista, "Windows Vista", statusTips["vista"], isToggle=True, group=styleGroup)
 		style4 = self.menuItem(winXP, "Windows XP", statusTips["XP"], isToggle=True, group=styleGroup)
+		for style in styleGroup.actions():
+			# print("style: "+str(style.text()).capitalize().replace(" ", "") + "	setting: "+config.value("primaryStyle"))
+			if (str(style.text()).capitalize().replace(" ", ""))==config.value("primaryStyle"):style.setChecked(True)
+			# Makes sure that the configured style appears as checked on load
+		style3.setText(style3.text() + " (Default)")
 
-
-
+		colorPicker=self.menuItem(QColorDialog.getColor,"Color Picker")
 		# TODO: Reset layout of window to default?
 		#resetPlacement = self.menuItem(None, "Reset Window Layout", "Reset the window layout to default")
 
@@ -300,17 +297,21 @@ class window(QMainWindow):
 		fileMenu = mainMenu.addMenu("File")
 		editMenu = mainMenu.addMenu("Edit")
 		viewMenu = mainMenu.addMenu("View")
-		styleMenu = viewMenu.addMenu("Styles")
 
+		styleMenu = viewMenu.addMenu("Styles")
 		layoutMenu = viewMenu.addMenu("Layout")
-		layoutMenu.addAction(self.menuItem(testPrint, None))  # TODO:give meaningful functions later
+
 		# Add actions to menus
-		fileMenu.addAction(self.actQuit)  # TODO:add a status tip to this, "Close the application"
-		fileMenu.addAction(prefs)  # TODO:add a status tip to this, "View and edit application settings"
+		fileMenu.addAction(self.actQuit)  # DONE:add a status tip to this, "Close the application"
+		fileMenu.addAction(prefs)  # DONE:add a status tip to this, "View and edit application settings"
 
 		editMenu.addAction(self.actCopy)
 		editMenu.addAction(self.actCut)
 		editMenu.addAction(self.actPaste)
+
+		viewMenu.addAction(colorPicker)
+
+		layoutMenu.addAction(self.menuItem(testPrint, None))  # TODO:give meaningful functions later
 
 		styleMenu.addAction(style1)
 		styleMenu.addAction(style2)
@@ -419,7 +420,7 @@ class window(QMainWindow):
 		responses.good.clicked.connect(onClicked)
 
 		# add content to this
-		#TODO: probably need to use a byte array to store current settings on opening preferences window. that would be used to restore discarded changes
+		#DONE: probably need to use a byte array to store current settings on opening preferences window. that would be used to restore discarded changes
 		#TODO: apply doesnt just need to sync, it needs to update too
 		winTitle=QLineEdit(config.value("cfgWindowTitle"))
 		winTitle.cfgName="cfgWindowTitle"#CRITICAL FOR AUTOMATIC SETTING SAVE
@@ -468,14 +469,14 @@ class window(QMainWindow):
 		if cfgMainToolBarPos == "\n" or cfgMainToolBarPos not in ["1","2","4","8"]:
 			config.setValue("mainToolBarPosition", Qt.LeftToolBarArea)#Default toolbar position is on the left side
 
-		# Currently Non Functional
+		# DONE: Fixed
 		cfgMainToolBarMoveable=config.value("isMainToolBarMovable")
 		# if cfgMainToolBarMoveable == "\n" or type(cfgMainToolBarMoveable)!=bool:
 		if cfgMainToolBarMoveable not in extendedBools:
 				config.setValue("isMainToolBarMovable",True)#Main toolbar is movable by default
 		elif cfgMainToolBarMoveable in [1,"t","T", "true", "True"]:config.setValue("isMainToolBarMovable",True)
 		elif cfgMainToolBarMoveable in [0,"f","F", "false","False"]:config.setValue("isMainToolBarMovable",False)
-		# Currently Non Functional
+		# DONE: Fixed
 		cfgMainToolBarFloatable=config.value("isMainToolBarFloatable")
 		if cfgMainToolBarFloatable not in extendedBools:
 			config.setValue("isMainToolBarFloatable",True)#Main toolbar is floatable by default
@@ -579,3 +580,27 @@ def run ():
 	sys.exit(app.exec_())
 
 run()
+# TODO:
+		#   Mutually exclusive checkboxes/toggle buttons for battery settings
+		#   Histograph of motherboard, CPU, HDD, and SSD temperatures.
+		#   Display indicating current CPU clock speed. maybe only update every 5-10 seconds?
+		#   Display indicating CPU usage % and #of processes
+		#   Display indicating current RAM usage. probably in the form of a vertical bar AND a text label.
+		# ?   Quick launch button for Discord+Hexchat?
+		#   Display of (local/computer) date and time. local weather if arrangeable
+		# ?   Display of current network I/O ?
+		#	Add config menu items for keep on top and frameless modes
+		# ?   Allow adjusting colors of histograph/chart/progress bar attributes through a (menu accessed popup or tab?) application preferences (menu?)
+		#   Application close confirmation popup (disableable in preferences)
+		# ?  Snipping tool quick launch button?
+		#   Make status bar at bottom of page have clearly defined edges
+		#   Create a list of QActions to have initialized in some kind of loop?
+		#   Give main toolbar its own context menu with a CHECKABLE option to lock/unlock the toolbar
+		#	Add a list of keybinds, maybe use https://doc.qt.io/qt-5/qaction.html#shortcuts
+		#DONE:	Sync settings TO config before close
+		#DONE:  Button to clear system clipboard
+		#DONE:  Universal color picker function. WITH A PIPETTE TOOL
+		#DONE:	Retain previous settings
+		#DONE:  Keep on top capability
+		#DONE: 	Make sure that the configured style appears as checked on load
+		#DONE: 	Edit the logo to make the white background transparent
